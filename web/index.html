@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <!--
+    If you are serving your web app in a path other than the root, change the
+    href value below to reflect the base path you are serving from.
+
+    The path provided below has to start and end with a slash "/" in order for
+    it to work correctly.
+
+    For more details:
+    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
+
+    This is a placeholder for base href that will be replaced by the value of
+    the `--base-href` argument provided to `flutter build`.
+  -->
+    <base href="$FLUTTER_BASE_HREF">
+
+    <meta charset="UTF-8">
+    <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+
+    <!-- iOS meta tags & icons -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+    <script src="settings/settings.js"></script>
+</head>
+
+<body>
+    <div id="loading">
+        <style>
+            body {
+                inset: 0;
+                overflow: hidden;
+                margin: 0;
+                padding: 0;
+                position: fixed;
+            }
+            
+            body {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            .spinner {
+                animation: rotator 1.333s linear infinite;
+            }
+            
+            @keyframes rotator {
+                0% {
+                    transform: rotate(0deg);
+                }
+                100% {
+                    transform: rotate(270deg);
+                }
+            }
+            
+            .path {
+                stroke-dasharray: 124;
+                stroke-dashoffset: 0;
+                transform-origin: center;
+                stroke: var(--theme-color);
+                animation: dash 1.333s ease-in-out infinite;
+            }
+            
+            @keyframes dash {
+                0% {
+                    stroke-dashoffset: 120;
+                }
+                50% {
+                    stroke-dashoffset: 29;
+                    transform: rotate(135deg);
+                }
+                100% {
+                    stroke-dashoffset: 120;
+                    transform: rotate(450deg);
+                }
+            }
+        </style>
+        <svg class="spinner" width="44px" height="44px" viewBox="0 0 44 44">
+        <circle class="path" fill="none" stroke-width="4" cx="22" cy="22" r="19"></circle>
+     </svg>
+    </div>
+    <script>
+        {{flutter_js}}
+        {{flutter_build_config}}
+        _flutter.loader.load({
+            serviceWorkerSettings: {serviceWorkerVersion: {{flutter_service_worker_version}}},
+            onEntrypointLoaded: async function(engineInitializer) {
+                const appRunner = await engineInitializer.initializeEngine({useColorEmoji: true});
+                await appRunner.runApp();
+                var element = document.getElementById('loading');
+                if (element) {
+                    element.remove();
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>
