@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import 'util/enum2json.dart';
-import 'util/storage.dart';
+import '../util/enum2json.dart';
+import '../util/storage.dart';
 
 final themeMode = () {
   final themeModeInt = Storage.getInt(StorageKeys.themeMode);

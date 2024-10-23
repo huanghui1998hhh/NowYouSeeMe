@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import 'brightness_switcher.dart';
 import 'util/storage.dart';
+import 'widget/brightness_switcher.dart';
 
 void main() async {
   await Storage.init();
@@ -31,7 +31,7 @@ class MyApp extends StatelessWidget {
             ),
             useMaterial3: true,
           ),
-          home: const MyHomePage(title: 'Flutter Demo Home Page'),
+          home: const MyHomePage(),
         );
       },
     );
@@ -39,9 +39,7 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  final String title;
+  const MyHomePage({super.key});
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
