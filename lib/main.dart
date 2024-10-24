@@ -50,10 +50,43 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
+    return Scaffold(
       body: Stack(
         children: [
-          Window(),
+          Window(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceContainer,
+                borderRadius: const BorderRadius.all(Radius.circular(12)),
+              ),
+              child: Builder(
+                builder: (context) {
+                  return Column(
+                    children: [
+                      WindowDraggableArea(
+                        child: AppBar(
+                          title: const Text('Now You See Me'),
+                          backgroundColor: Colors.red,
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Window.of(context).mode = WindowMode.maximized;
+                        },
+                        child: const Text('Maximize'),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Window.of(context).mode = WindowMode.normal;
+                        },
+                        child: const Text('Normal'),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+          ),
         ],
       ),
     );
