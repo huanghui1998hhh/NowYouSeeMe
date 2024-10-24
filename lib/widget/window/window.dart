@@ -41,7 +41,23 @@ class WindowState extends State<Window> {
       rect: _rect,
       child: ResizeListener(
         onResizeUpdate: _onResizeUpdate,
-        child: const ColoredBox(color: Colors.yellow, child: Center()),
+        child: ColoredBox(
+          color: Colors.yellow,
+          child: Column(
+            children: [
+              GestureDetector(
+                onPanUpdate: (details) {
+                  rect = rect.shift(details.delta);
+                },
+                child: AppBar(
+                  title: const Text('Now You See Me'),
+                  backgroundColor: Colors.red,
+                ),
+              ),
+              const Expanded(child: SizedBox.shrink()),
+            ],
+          ),
+        ),
       ),
     );
   }

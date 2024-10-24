@@ -110,16 +110,28 @@ class RenderResizeListener extends RenderMouseRegion {
   Drag? _dragInfo;
 
   bool get isDragging => _dragInfo != null;
+  ResizeDirection? _resizeDirection;
+  ResizeDirection? get resizeDirection => _resizeDirection;
+  set resizeDirection(ResizeDirection? value) {
+    _resizeDirection = value;
+    cursor = value?.cursor ?? MouseCursor.defer;
+  }
+
+  @override
+  bool hitTest(BoxHitTestResult result, {required Offset position}) {
+    resizeDirection = _getResizeDirection(position);
+
+    return super.hitTest(result, position: position);
+  }
 
   @override
   void handleEvent(PointerEvent event, HitTestEntry entry) {
     super.handleEvent(event, entry);
     if (onResizeUpdate == null) return;
+    if (resizeDirection == null) return;
     if (isDragging) return;
-    final resizeDirection = _getResizeDirection(event.localPosition);
-    cursor = resizeDirection?.cursor ?? MouseCursor.defer;
-    if (resizeDirection != null && event is PointerDownEvent) {
-      startDrag(event, resizeDirection);
+    if (event is PointerDownEvent) {
+      startDrag(event, resizeDirection!);
     }
   }
 
