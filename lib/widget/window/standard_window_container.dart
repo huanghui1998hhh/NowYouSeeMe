@@ -30,6 +30,7 @@ class StandardWindowContainer extends StatelessWidget {
         borderRadius: const BorderRadius.all(Radius.circular(12)),
         border: Border.all(
           color: colorScheme.outlineVariant,
+          width: 0.5,
         ),
         boxShadow: [
           BoxShadow(
