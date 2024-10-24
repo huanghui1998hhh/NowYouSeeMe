@@ -15,6 +15,7 @@ class ResizeListener extends SingleChildRenderObjectWidget {
   const ResizeListener({
     super.key,
     this.threshold = 5.0,
+    this.directions = ResizeDirection.all,
     this.onEnter,
     this.onExit,
     this.onHover,
@@ -29,6 +30,7 @@ class ResizeListener extends SingleChildRenderObjectWidget {
   /// It is used to define a boundary around the edges of a widget
   /// where resize gestures are recognized.
   final double threshold;
+  final Set<ResizeDirection> directions;
   final PointerEnterEventListener? onEnter;
   final PointerHoverEventListener? onHover;
   final PointerExitEventListener? onExit;
@@ -167,21 +169,21 @@ class RenderResizeListener extends RenderMouseRegion {
 
     if (position.dy <= threshold) {
       if (position.dx <= threshold) {
-        return ResizeDirection.upLeft;
+        return ResizeDirection.topLeft;
       } else if (position.dx >= width - threshold) {
-        return ResizeDirection.upRight;
+        return ResizeDirection.topRight;
       } else {
-        return ResizeDirection.up;
+        return ResizeDirection.top;
       }
     }
 
     if (position.dy >= height - threshold) {
       if (position.dx <= threshold) {
-        return ResizeDirection.downLeft;
+        return ResizeDirection.bottomLeft;
       } else if (position.dx >= width - threshold) {
-        return ResizeDirection.downRight;
+        return ResizeDirection.bottomRight;
       } else {
-        return ResizeDirection.down;
+        return ResizeDirection.bottom;
       }
     }
 
@@ -227,16 +229,27 @@ class _ResizeDragInfo extends Drag {
 }
 
 enum ResizeDirection {
-  upLeft(SystemMouseCursors.resizeUpLeft),
-  up(SystemMouseCursors.resizeUp),
-  upRight(SystemMouseCursors.resizeUpRight),
+  topLeft(SystemMouseCursors.resizeUpLeft),
+  top(SystemMouseCursors.resizeUp),
+  topRight(SystemMouseCursors.resizeUpRight),
   right(SystemMouseCursors.resizeRight),
-  downRight(SystemMouseCursors.resizeDownRight),
-  down(SystemMouseCursors.resizeDown),
-  downLeft(SystemMouseCursors.resizeDownLeft),
+  bottomRight(SystemMouseCursors.resizeDownRight),
+  bottom(SystemMouseCursors.resizeDown),
+  bottomLeft(SystemMouseCursors.resizeDownLeft),
   left(SystemMouseCursors.resizeLeft);
 
   const ResizeDirection(this.cursor);
 
   final SystemMouseCursor cursor;
+
+  static const all = {
+    topLeft,
+    top,
+    topRight,
+    right,
+    bottomRight,
+    bottom,
+    bottomLeft,
+    left,
+  };
 }

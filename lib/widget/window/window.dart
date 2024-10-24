@@ -54,36 +54,36 @@ class WindowState extends State<Window> {
 extension on Rect {
   Rect resizeTo(ResizeDirection direction, {required Offset delta}) {
     switch (direction) {
-      case ResizeDirection.up:
+      case ResizeDirection.top:
         return Rect.fromLTRB(left, top + delta.dy, right, bottom);
-      case ResizeDirection.down:
+      case ResizeDirection.bottom:
         return Rect.fromLTRB(left, top, right, bottom + delta.dy);
       case ResizeDirection.left:
         return Rect.fromLTRB(left + delta.dx, top, right, bottom);
       case ResizeDirection.right:
         return Rect.fromLTRB(left, top, right + delta.dx, bottom);
-      case ResizeDirection.upLeft:
+      case ResizeDirection.topLeft:
         return Rect.fromLTRB(
           left + delta.dx,
           top + delta.dy,
           right,
           bottom,
         );
-      case ResizeDirection.upRight:
+      case ResizeDirection.topRight:
         return Rect.fromLTRB(
           left,
           top + delta.dy,
           right + delta.dx,
           bottom,
         );
-      case ResizeDirection.downRight:
+      case ResizeDirection.bottomRight:
         return Rect.fromLTRB(
           left,
           top,
           right + delta.dx,
           bottom + delta.dy,
         );
-      case ResizeDirection.downLeft:
+      case ResizeDirection.bottomLeft:
         return Rect.fromLTRB(
           left + delta.dx,
           top,
