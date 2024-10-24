@@ -1,11 +1,21 @@
 import 'package:flutter/material.dart';
 
 import 'resize_listener.dart';
+import 'standard_window_container.dart';
+
+typedef WindowBuilder = Widget Function(BuildContext context, Widget child);
 
 class Window extends StatefulWidget {
-  const Window({super.key, required this.child});
+  const Window({super.key, this.builder, required this.child});
 
+  const Window.standard({super.key, required this.child})
+      : builder = standardBuilder;
+
+  final WindowBuilder? builder;
   final Widget child;
+
+  static Widget standardBuilder(BuildContext context, Widget child) =>
+      StandardWindowContainer(child: child);
 
   static WindowState of(BuildContext context) {
     final windowState = context.findAncestorStateOfType<WindowState>();
@@ -27,6 +37,8 @@ class Window extends StatefulWidget {
 }
 
 class WindowState extends State<Window> {
+  final GlobalKey childKey = GlobalKey();
+
   WindowMode _mode = WindowMode.normal;
   WindowMode get mode => _mode;
   set mode(WindowMode mode) {
@@ -49,10 +61,18 @@ class WindowState extends State<Window> {
 
   @override
   Widget build(BuildContext context) {
-    Widget current = ResizeListener(
-      onResizeUpdate: _onResizeUpdate,
-      child: RepaintBoundary(child: widget.child),
-    );
+    Widget current = RepaintBoundary(key: childKey, child: widget.child);
+
+    if (widget.builder != null) {
+      current = widget.builder!(context, current);
+    }
+
+    if (mode == WindowMode.normal) {
+      current = ResizeListener(
+        onResizeUpdate: _onResizeUpdate,
+        child: current,
+      );
+    }
 
     current = switch (mode) {
       WindowMode.normal => Positioned.fromRect(

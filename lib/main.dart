@@ -56,7 +56,7 @@ class _MyHomePageState extends State<MyHomePage> {
     return const Scaffold(
       body: Stack(
         children: [
-          Window(child: FirstApp()),
+          Window.standard(child: FirstApp()),
         ],
       ),
     );
