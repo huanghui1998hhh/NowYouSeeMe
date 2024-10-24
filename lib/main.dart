@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'util/storage.dart';
+import 'widget/app/first_app.dart';
 import 'widget/brightness_switcher.dart';
 import 'widget/window/window.dart';
 
@@ -25,6 +26,7 @@ class MyApp extends StatelessWidget {
           theme: ThemeData(
             colorScheme: ColorScheme.fromSeed(seedColor: seedColor),
             useMaterial3: true,
+            splashFactory: InkSparkle.splashFactory,
           ),
           darkTheme: ThemeData(
             colorScheme: ColorScheme.fromSeed(
@@ -32,6 +34,7 @@ class MyApp extends StatelessWidget {
               brightness: Brightness.dark,
             ),
             useMaterial3: true,
+            splashFactory: InkSparkle.splashFactory,
           ),
           home: const MyHomePage(),
         );
@@ -50,43 +53,10 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return const Scaffold(
       body: Stack(
         children: [
-          Window(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceContainer,
-                borderRadius: const BorderRadius.all(Radius.circular(12)),
-              ),
-              child: Builder(
-                builder: (context) {
-                  return Column(
-                    children: [
-                      WindowDraggableArea(
-                        child: AppBar(
-                          title: const Text('Now You See Me'),
-                          backgroundColor: Colors.red,
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          Window.of(context).mode = WindowMode.maximized;
-                        },
-                        child: const Text('Maximize'),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          Window.of(context).mode = WindowMode.normal;
-                        },
-                        child: const Text('Normal'),
-                      ),
-                    ],
-                  );
-                },
-              ),
-            ),
-          ),
+          Window(child: FirstApp()),
         ],
       ),
     );

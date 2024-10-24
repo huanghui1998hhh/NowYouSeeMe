@@ -112,6 +112,7 @@ class WindowDraggableArea extends StatelessWidget {
         assert(windowState.mode == WindowMode.normal);
         windowState.shift(details.delta);
       },
+      behavior: HitTestBehavior.opaque,
       child: child,
     );
   }
