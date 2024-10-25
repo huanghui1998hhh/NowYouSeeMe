@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'util/storage.dart';
 import 'widget/app/first_app.dart';
+import 'widget/app/nomodel_route.dart';
 import 'widget/brightness_switcher.dart';
 import 'widget/window/window.dart';
 
@@ -36,6 +37,7 @@ class MyApp extends StatelessWidget {
             useMaterial3: true,
             splashFactory: InkSparkle.splashFactory,
           ),
+          builder: (context, child) => Scaffold(body: child),
           home: const MyHomePage(),
         );
       },
@@ -53,11 +55,51 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Stack(
-        children: [
-          Window.standard(child: FirstApp()),
-        ],
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: Image.asset(
+            'assets/jpg/desktop.jpg',
+            fit: BoxFit.cover,
+          ),
+        ),
+        const Positioned(
+          top: 10,
+          left: 10,
+          child: ExampleButton(),
+        ),
+        const Align(
+          child: ExampleButton(),
+        ),
+      ],
+    );
+  }
+}
+
+class ExampleButton extends StatelessWidget {
+  const ExampleButton({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () {
+        Navigator.of(context).push(
+          RawWindowRoute(
+            pageBuilder: (context, animation, secondaryAnimation) =>
+                const Window.standard(child: FirstApp()),
+          ),
+        );
+      },
+      child: Container(
+        width: 60,
+        height: 60,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: const Align(child: FlutterLogo(size: 44)),
       ),
     );
   }

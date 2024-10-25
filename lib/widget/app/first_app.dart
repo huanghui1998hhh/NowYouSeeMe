@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../brightness_switcher.dart';
 import '../window/window.dart';
+import 'nomodel_route.dart';
 
 class FirstApp extends StatelessWidget {
   const FirstApp({super.key});
@@ -46,7 +47,9 @@ class FirstApp extends StatelessWidget {
                   ),
                 ),
                 InkWell(
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.of(context).pop();
+                  },
                   hoverColor: const Color(0xFFe30d2c),
                   child: const SizedBox(
                     width: 46,
@@ -72,6 +75,26 @@ class FirstApp extends StatelessWidget {
           child: const Text('Normal'),
         ),
         const BrightnessSwitcher(),
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).push(
+              RawWindowRoute(
+                pageBuilder: (context, animation, secondaryAnimation) =>
+                    Builder(
+                  builder: (context) => Align(
+                    child: TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      child: const Text('pop'),
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+          child: const Text('About'),
+        ),
       ],
     );
   }

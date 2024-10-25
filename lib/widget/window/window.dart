@@ -82,7 +82,11 @@ class WindowState extends State<Window> {
       WindowMode.maximized => Positioned.fill(child: current),
     };
 
-    return current;
+    return Stack(
+      children: [
+        current,
+      ],
+    );
   }
 
   void _onResizeUpdate(ResizeDirection direction, DragUpdateDetails details) {
