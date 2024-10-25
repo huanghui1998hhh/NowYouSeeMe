@@ -8,6 +8,16 @@
             "args": [
                 "--enable-experiment=macros",
             ],
+        },
+        {
+            "name": "debug_with_macros_release",
+            "type": "dart",
+            "request": "launch",
+            "program": "lib/main.dart",
+            "args": [
+                "--release",
+                "--enable-experiment=macros",
+            ],
         }
     ]
 }

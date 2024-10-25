@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../brightness_switcher.dart';
 import '../window/window.dart';
-import 'nomodel_route.dart';
+import '../window/window_route.dart';
 
 class FirstApp extends StatelessWidget {
   const FirstApp({super.key});
@@ -78,7 +78,7 @@ class FirstApp extends StatelessWidget {
         TextButton(
           onPressed: () {
             Navigator.of(context).push(
-              RawWindowRoute(
+              StandardWindowRoute(
                 pageBuilder: (context, animation, secondaryAnimation) =>
                     Builder(
                   builder: (context) => Align(

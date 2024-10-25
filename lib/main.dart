@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import 'util/storage.dart';
 import 'widget/app/first_app.dart';
-import 'widget/app/nomodel_route.dart';
 import 'widget/brightness_switcher.dart';
-import 'widget/window/window.dart';
+import 'widget/window/window_route.dart';
 
 void main() async {
   await Storage.init();
-  runApp(const MyApp());
+  runApp(ValueListenableProvider.value(value: themeMode, child: const MyApp()));
 }
 
 class MyApp extends StatelessWidget {
@@ -18,29 +18,24 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     const seedColor = Color(0xFF3a164c);
 
-    return ValueListenableBuilder(
-      valueListenable: themeMode,
-      builder: (context, themeMode, child) {
-        return MaterialApp(
-          title: 'Now You See Me',
-          themeMode: themeMode,
-          theme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(seedColor: seedColor),
-            useMaterial3: true,
-            splashFactory: InkSparkle.splashFactory,
-          ),
-          darkTheme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: seedColor,
-              brightness: Brightness.dark,
-            ),
-            useMaterial3: true,
-            splashFactory: InkSparkle.splashFactory,
-          ),
-          builder: (context, child) => Scaffold(body: child),
-          home: const MyHomePage(),
-        );
-      },
+    return MaterialApp(
+      title: 'Now You See Me',
+      themeMode: context.watch<ThemeMode>(),
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: seedColor),
+        useMaterial3: true,
+        splashFactory: InkSparkle.splashFactory,
+      ),
+      darkTheme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: seedColor,
+          brightness: Brightness.dark,
+        ),
+        useMaterial3: true,
+        splashFactory: InkSparkle.splashFactory,
+      ),
+      builder: (context, child) => Scaffold(body: child),
+      home: const MyHomePage(),
     );
   }
 }
@@ -86,9 +81,9 @@ class ExampleButton extends StatelessWidget {
     return InkWell(
       onTap: () {
         Navigator.of(context).push(
-          RawWindowRoute(
+          StandardWindowRoute(
             pageBuilder: (context, animation, secondaryAnimation) =>
-                const Window.standard(child: FirstApp()),
+                const FirstApp(),
           ),
         );
       },

@@ -37,8 +37,6 @@ class Window extends StatefulWidget {
 }
 
 class WindowState extends State<Window> {
-  final GlobalKey childKey = GlobalKey();
-
   WindowMode _mode = WindowMode.normal;
   WindowMode get mode => _mode;
   set mode(WindowMode mode) {
@@ -61,7 +59,7 @@ class WindowState extends State<Window> {
 
   @override
   Widget build(BuildContext context) {
-    Widget current = RepaintBoundary(key: childKey, child: widget.child);
+    Widget current = widget.child;
 
     if (widget.builder != null) {
       current = widget.builder!(context, current);
@@ -75,18 +73,27 @@ class WindowState extends State<Window> {
     }
 
     current = switch (mode) {
-      WindowMode.normal => Positioned.fromRect(
-          rect: _rect,
+      WindowMode.normal => Padding(
+          padding: EdgeInsets.only(
+            top: _rect.top,
+            left: _rect.left,
+          ),
+          child: Align(
+            alignment: Alignment.topLeft,
+            child: SizedBox(
+              width: _rect.width,
+              height: _rect.height,
+              child: current,
+            ),
+          ),
+        ),
+      WindowMode.maximized => ConstrainedBox(
+          constraints: const BoxConstraints.expand(),
           child: current,
         ),
-      WindowMode.maximized => Positioned.fill(child: current),
     };
 
-    return Stack(
-      children: [
-        current,
-      ],
-    );
+    return current;
   }
 
   void _onResizeUpdate(ResizeDirection direction, DragUpdateDetails details) {

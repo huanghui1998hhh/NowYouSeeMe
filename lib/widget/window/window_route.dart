@@ -3,14 +3,19 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
 
-enum _ModalRouteAspect {
+import 'standard_window_container.dart';
+import 'window.dart';
+
+// This file is a modified version of flutter's [ModalRoute].
+
+enum _WindowRouteAspect {
   isCurrent,
   canPop,
   settings,
 }
 
-class _ModalScopeStatus extends InheritedModel<_ModalRouteAspect> {
-  const _ModalScopeStatus({
+class _WindowScopeStatus extends InheritedModel<_WindowRouteAspect> {
+  const _WindowScopeStatus({
     required this.isCurrent,
     required this.canPop,
     required this.route,
@@ -22,7 +27,7 @@ class _ModalScopeStatus extends InheritedModel<_ModalRouteAspect> {
   final Route<dynamic> route;
 
   @override
-  bool updateShouldNotify(_ModalScopeStatus old) {
+  bool updateShouldNotify(_WindowScopeStatus old) {
     return isCurrent != old.isCurrent ||
         canPop != old.canPop ||
         route != old.route;
@@ -44,41 +49,39 @@ class _ModalScopeStatus extends InheritedModel<_ModalRouteAspect> {
 
   @override
   bool updateShouldNotifyDependent(
-    covariant _ModalScopeStatus oldWidget,
-    Set<_ModalRouteAspect> dependencies,
+    covariant _WindowScopeStatus oldWidget,
+    Set<_WindowRouteAspect> dependencies,
   ) {
     return dependencies.any(
-      (_ModalRouteAspect dependency) => switch (dependency) {
-        _ModalRouteAspect.isCurrent => isCurrent != oldWidget.isCurrent,
-        _ModalRouteAspect.canPop => canPop != oldWidget.canPop,
-        _ModalRouteAspect.settings =>
+      (_WindowRouteAspect dependency) => switch (dependency) {
+        _WindowRouteAspect.isCurrent => isCurrent != oldWidget.isCurrent,
+        _WindowRouteAspect.canPop => canPop != oldWidget.canPop,
+        _WindowRouteAspect.settings =>
           route.settings != oldWidget.route.settings,
       },
     );
   }
 }
 
-class _ModalScope<T> extends StatefulWidget {
-  const _ModalScope({
+class _WindowScope<T> extends StatefulWidget {
+  const _WindowScope({
     super.key,
     required this.route,
   });
 
-  final NoModalRoute<T> route;
+  final WindowRoute<T> route;
 
   @override
-  _ModalScopeState<T> createState() => _ModalScopeState<T>();
+  _WindowScopeState<T> createState() => _WindowScopeState<T>();
 }
 
-class _ModalScopeState<T> extends State<_ModalScope<T>> {
+class _WindowScopeState<T> extends State<_WindowScope<T>> {
   Widget? _page;
 
-  // This is the combination of the two animations for the route.
   late Listenable _listenable;
 
-  /// The node this scope will use for its root [FocusScope] widget.
   final FocusScopeNode focusScopeNode = FocusScopeNode(
-    debugLabel: '$_ModalScopeState Focus Scope',
+    debugLabel: '$_WindowScopeState Focus Scope',
   );
   final ScrollController primaryScrollController = ScrollController();
 
@@ -94,7 +97,7 @@ class _ModalScopeState<T> extends State<_ModalScope<T>> {
   }
 
   @override
-  void didUpdateWidget(_ModalScope<T> oldWidget) {
+  void didUpdateWidget(_WindowScope<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
     assert(widget.route == oldWidget.route);
     _updateFocusScopeNode();
@@ -109,7 +112,7 @@ class _ModalScopeState<T> extends State<_ModalScope<T>> {
 
   void _updateFocusScopeNode() {
     final TraversalEdgeBehavior traversalEdgeBehavior;
-    final NoModalRoute<T> route = widget.route;
+    final WindowRoute<T> route = widget.route;
     if (route.traversalEdgeBehavior != null) {
       traversalEdgeBehavior = route.traversalEdgeBehavior!;
     } else {
@@ -169,7 +172,7 @@ class _ModalScopeState<T> extends State<_ModalScope<T>> {
           child: child!,
         );
       },
-      child: _ModalScopeStatus(
+      child: _WindowScopeStatus(
         route: widget.route,
         isCurrent:
             widget.route.isCurrent, // _routeSetState is called if this updates
@@ -186,40 +189,46 @@ class _ModalScopeState<T> extends State<_ModalScope<T>> {
                   child: FocusScope.withExternalFocusNode(
                     focusScopeNode: focusScopeNode, // immutable
                     child: RepaintBoundary(
-                      child: ListenableBuilder(
-                        listenable: _listenable, // immutable
-                        builder: (BuildContext context, Widget? child) {
-                          return widget.route.buildTransitions(
+                      child: Window(
+                        child: ListenableBuilder(
+                          listenable: _listenable, // immutable
+                          builder: (BuildContext context, Widget? child) {
+                            return widget.route.buildTransitions(
+                              context,
+                              widget.route.animation!,
+                              widget.route.secondaryAnimation!,
+                              ListenableBuilder(
+                                listenable: widget.route.navigator
+                                        ?.userGestureInProgressNotifier ??
+                                    ValueNotifier<bool>(false),
+                                builder: (BuildContext context, Widget? child) {
+                                  final bool ignoreEvents =
+                                      _shouldIgnoreFocusRequest;
+                                  focusScopeNode.canRequestFocus =
+                                      !ignoreEvents;
+                                  return IgnorePointer(
+                                    ignoring: ignoreEvents,
+                                    child: child,
+                                  );
+                                },
+                                child: child,
+                              ),
+                            );
+                          },
+                          child: widget.route.buildWindow(
                             context,
-                            widget.route.animation!,
-                            widget.route.secondaryAnimation!,
-                            ListenableBuilder(
-                              listenable: widget.route.navigator
-                                      ?.userGestureInProgressNotifier ??
-                                  ValueNotifier<bool>(false),
-                              builder: (BuildContext context, Widget? child) {
-                                final bool ignoreEvents =
-                                    _shouldIgnoreFocusRequest;
-                                focusScopeNode.canRequestFocus = !ignoreEvents;
-                                return IgnorePointer(
-                                  ignoring: ignoreEvents,
-                                  child: child,
-                                );
-                              },
-                              child: child,
+                            _page ??= RepaintBoundary(
+                              key: widget.route._subtreeKey, // immutable
+                              child: Builder(
+                                builder: (BuildContext context) {
+                                  return widget.route.buildPage(
+                                    context,
+                                    widget.route.animation!,
+                                    widget.route.secondaryAnimation!,
+                                  );
+                                },
+                              ),
                             ),
-                          );
-                        },
-                        child: _page ??= RepaintBoundary(
-                          key: widget.route._subtreeKey, // immutable
-                          child: Builder(
-                            builder: (BuildContext context) {
-                              return widget.route.buildPage(
-                                context,
-                                widget.route.animation!,
-                                widget.route.secondaryAnimation!,
-                              );
-                            },
                           ),
                         ),
                       ),
@@ -235,9 +244,9 @@ class _ModalScopeState<T> extends State<_ModalScope<T>> {
   }
 }
 
-abstract class NoModalRoute<T> extends TransitionRoute<T>
+abstract class WindowRoute<T> extends TransitionRoute<T>
     with LocalHistoryRoute<T> {
-  NoModalRoute({
+  WindowRoute({
     super.settings,
     this.traversalEdgeBehavior,
   });
@@ -245,28 +254,28 @@ abstract class NoModalRoute<T> extends TransitionRoute<T>
   final TraversalEdgeBehavior? traversalEdgeBehavior;
 
   @optionalTypeArgs
-  static NoModalRoute<T>? of<T extends Object?>(BuildContext context) {
+  static WindowRoute<T>? of<T extends Object?>(BuildContext context) {
     return _of<T>(context);
   }
 
-  static NoModalRoute<T>? _of<T extends Object?>(
+  static WindowRoute<T>? _of<T extends Object?>(
     BuildContext context, [
-    _ModalRouteAspect? aspect,
+    _WindowRouteAspect? aspect,
   ]) {
-    return InheritedModel.inheritFrom<_ModalScopeStatus>(
+    return InheritedModel.inheritFrom<_WindowScopeStatus>(
       context,
       aspect: aspect,
-    )?.route as NoModalRoute<T>?;
+    )?.route as WindowRoute<T>?;
   }
 
   static bool? isCurrentOf(BuildContext context) =>
-      _of(context, _ModalRouteAspect.isCurrent)?.isCurrent;
+      _of(context, _WindowRouteAspect.isCurrent)?.isCurrent;
 
   static bool? canPopOf(BuildContext context) =>
-      _of(context, _ModalRouteAspect.canPop)?.canPop;
+      _of(context, _WindowRouteAspect.canPop)?.canPop;
 
   static RouteSettings? settingsOf(BuildContext context) =>
-      _of(context, _ModalRouteAspect.settings)?.settings;
+      _of(context, _WindowRouteAspect.settings)?.settings;
 
   @protected
   void setState(VoidCallback fn) {
@@ -280,7 +289,7 @@ abstract class NoModalRoute<T> extends TransitionRoute<T>
   static RoutePredicate withName(String name) {
     return (Route<dynamic> route) {
       return !route.willHandlePopInternally &&
-          route is NoModalRoute &&
+          route is WindowRoute &&
           route.settings.name == name;
     };
   }
@@ -290,6 +299,12 @@ abstract class NoModalRoute<T> extends TransitionRoute<T>
     Animation<double> animation,
     Animation<double> secondaryAnimation,
   );
+
+  Widget buildWindow(
+    BuildContext context,
+    Widget child,
+  ) =>
+      child;
 
   Widget buildTransitions(
     BuildContext context,
@@ -325,9 +340,15 @@ abstract class NoModalRoute<T> extends TransitionRoute<T>
     super.didAdd();
   }
 
+  @override
+  bool get opaque => false;
+
+  @override
+  bool get allowSnapshotting => true;
+
   bool get semanticsDismissible => true;
 
-  bool get maintainState;
+  bool get maintainState => true;
 
   bool get popGestureInProgress => navigator!.userGestureInProgress;
 
@@ -383,7 +404,6 @@ abstract class NoModalRoute<T> extends TransitionRoute<T>
     changedInternalState();
   }
 
-  /// The build context for the subtree containing the primary content of this route.
   BuildContext? get subtreeContext => _subtreeKey.currentContext;
 
   @override
@@ -492,36 +512,23 @@ abstract class NoModalRoute<T> extends TransitionRoute<T>
     }
   }
 
-  /// Whether this route can be popped.
-  ///
-  /// A route can be popped if there is at least one active route below it, or
-  /// if [willHandlePopInternally] returns true.
-  ///
-  /// When this changes, if the route is visible, the route will
-  /// rebuild, and any widgets that used [NoModalRoute.of] will be
-  /// notified.
   bool get canPop => hasActiveRouteBelow || willHandlePopInternally;
 
   // Internals
 
-  final GlobalKey<_ModalScopeState<T>> _scopeKey =
-      GlobalKey<_ModalScopeState<T>>();
+  final GlobalKey<_WindowScopeState<T>> _scopeKey =
+      GlobalKey<_WindowScopeState<T>>();
   final GlobalKey _subtreeKey = GlobalKey();
   final PageStorageBucket _storageBucket = PageStorageBucket();
 
-  // We cache the part of the modal scope that doesn't change from frame to
-  // frame so that we minimize the amount of building that happens.
   Widget? _modalScopeCache;
 
-  // one of the builders
   Widget _buildModalScope(BuildContext context) {
-    // To be sorted before the _modalBarrier.
     return _modalScopeCache ??= Semantics(
       sortKey: const OrdinalSortKey(0.0),
-      child: _ModalScope<T>(
+      child: _WindowScope<T>(
         key: _scopeKey,
         route: this,
-        // _ModalScope calls buildTransitions() and buildChild(), defined above
       ),
     );
   }
@@ -544,29 +551,12 @@ abstract class NoModalRoute<T> extends TransitionRoute<T>
       '${objectRuntimeType(this, 'ModalRoute')}($settings, animation: $animation)';
 }
 
-abstract class PopupWindowRoute<T> extends NoModalRoute<T> {
-  PopupWindowRoute({
-    super.settings,
-    super.traversalEdgeBehavior,
-  });
-
-  @override
-  bool get opaque => false;
-
-  @override
-  bool get maintainState => true;
-
-  @override
-  bool get allowSnapshotting => true;
-}
-
-class RawWindowRoute<T> extends PopupWindowRoute<T> {
-  RawWindowRoute({
+class StandardWindowRoute<T> extends WindowRoute<T> {
+  StandardWindowRoute({
     required RoutePageBuilder pageBuilder,
     Duration transitionDuration = const Duration(milliseconds: 200),
     RouteTransitionsBuilder? transitionBuilder,
     super.settings,
-    this.anchorPoint,
     super.traversalEdgeBehavior,
   })  : _pageBuilder = pageBuilder,
         _transitionDuration = transitionDuration,
@@ -580,8 +570,6 @@ class RawWindowRoute<T> extends PopupWindowRoute<T> {
 
   final RouteTransitionsBuilder? _transitionBuilder;
 
-  final Offset? anchorPoint;
-
   @override
   Widget buildPage(
     BuildContext context,
@@ -591,12 +579,16 @@ class RawWindowRoute<T> extends PopupWindowRoute<T> {
     return Semantics(
       scopesRoute: true,
       explicitChildNodes: true,
-      child: DisplayFeatureSubScreen(
-        anchorPoint: anchorPoint,
-        child: _pageBuilder(context, animation, secondaryAnimation),
-      ),
+      child: _pageBuilder(context, animation, secondaryAnimation),
     );
   }
+
+  /// The difference between this and [WindowRoute.buildPage] is that this
+  /// build will wrap the [_subtreeKey] widget. So that you can manage your
+  /// state for the window's position/size/etc. without losing child's state.
+  @override
+  Widget buildWindow(BuildContext context, Widget child) =>
+      StandardWindowContainer(child: child);
 
   @override
   Widget buildTransitions(
@@ -606,10 +598,9 @@ class RawWindowRoute<T> extends PopupWindowRoute<T> {
     Widget child,
   ) {
     if (_transitionBuilder == null) {
-      return SlideTransition(
-        position: animation.drive(
-          Tween<Offset>(begin: const Offset(0, 0.05), end: Offset.zero),
-        ),
+      return ScaleTransition(
+        scale: animation.drive(Tween<double>(begin: 0.95, end: 1.0)),
+        alignment: const Alignment(0, 0.1),
         child: FadeTransition(
           opacity: animation,
           child: child,
