@@ -34,7 +34,7 @@ class StandardWindowContainer extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: colorScheme.outlineVariant.withOpacity(0.8),
+            color: colorScheme.windowShadowColor,
             blurRadius: 6,
           ),
         ],
@@ -42,4 +42,13 @@ class StandardWindowContainer extends StatelessWidget {
       child: child,
     );
   }
+}
+
+extension on ColorScheme {
+  Color get windowShadowColor => outlineVariant.withOpacity(
+        switch (brightness) {
+          Brightness.light => 0.8,
+          Brightness.dark => 0.5,
+        },
+      );
 }
