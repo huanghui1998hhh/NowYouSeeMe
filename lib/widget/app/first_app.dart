@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 
 import '../brightness_switcher.dart';
-import '../window/window.dart';
-import '../window/window_route.dart';
+import '../window/widget/window_draggable_area.dart';
+import '../window/window_route/window_route.dart';
 
 class FirstApp extends StatelessWidget {
   const FirstApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final windowState = Window.of(context);
+    final window = WindowRoute.of(context);
 
     return Column(
       children: [
@@ -25,9 +25,7 @@ class FirstApp extends StatelessWidget {
                   ),
                 ),
                 InkWell(
-                  onTap: () {
-                    windowState.mode = windowState.mode.toggle;
-                  },
+                  onTap: window.toggleWindowMode,
                   child: const SizedBox(
                     width: 46,
                     child: Align(
@@ -36,9 +34,7 @@ class FirstApp extends StatelessWidget {
                   ),
                 ),
                 InkWell(
-                  onTap: () {
-                    windowState.mode = windowState.mode.toggle;
-                  },
+                  onTap: window.toggleWindowMode,
                   child: const SizedBox(
                     width: 46,
                     child: Align(
@@ -64,13 +60,13 @@ class FirstApp extends StatelessWidget {
         ),
         TextButton(
           onPressed: () {
-            windowState.mode = WindowMode.maximized;
+            window.mode = WindowMode.maximized;
           },
           child: const Text('Maximize'),
         ),
         TextButton(
           onPressed: () {
-            windowState.mode = WindowMode.normal;
+            window.mode = WindowMode.normal;
           },
           child: const Text('Normal'),
         ),

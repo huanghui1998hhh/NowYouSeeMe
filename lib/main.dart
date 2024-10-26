@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'util/storage.dart';
 import 'widget/app/first_app.dart';
 import 'widget/brightness_switcher.dart';
-import 'widget/window/window_route.dart';
+import 'widget/window/window_route/window_route.dart';
 
 void main() async {
   await Storage.init();

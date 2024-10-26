@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'window.dart';
+import '../window_route/window_route.dart';
 
 class StandardWindowContainer extends StatelessWidget {
   const StandardWindowContainer({super.key, required this.child});
@@ -11,8 +11,7 @@ class StandardWindowContainer extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final windowState = Window.of(context);
-    final windowMode = windowState.mode;
+    final windowMode = WindowRoute.of(context).mode;
 
     if (windowMode == WindowMode.maximized) {
       return Container(

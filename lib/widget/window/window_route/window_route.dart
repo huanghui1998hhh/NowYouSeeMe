@@ -3,262 +3,111 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
 
-import 'standard_window_container.dart';
-import 'window.dart';
+import '../resize_listener.dart';
+import '../widget/standard_window_container.dart';
+
+part 'window_displayer.dart';
+part 'window_scope.dart';
 
 // This file is a modified version of flutter's [ModalRoute].
 
-enum _WindowRouteAspect {
-  isCurrent,
-  canPop,
-  settings,
+enum WindowMode {
+  // windowed
+  normal,
+  // full screen
+  maximized;
+
+  WindowMode get toggle => switch (this) {
+        WindowMode.normal => WindowMode.maximized,
+        WindowMode.maximized => WindowMode.normal,
+      };
 }
 
-class _WindowScopeStatus extends InheritedModel<_WindowRouteAspect> {
-  const _WindowScopeStatus({
-    required this.isCurrent,
-    required this.canPop,
-    required this.route,
-    required super.child,
-  });
+mixin WindowManagementMixin<T> on Route<T> {
+  // TODO: make there data inherited?
+  final GlobalKey<_WindowDisplayerState> _windowKey =
+      GlobalKey<_WindowDisplayerState>();
 
-  final bool isCurrent;
-  final bool canPop;
-  final Route<dynamic> route;
-
-  @override
-  bool updateShouldNotify(_WindowScopeStatus old) {
-    return isCurrent != old.isCurrent ||
-        canPop != old.canPop ||
-        route != old.route;
-  }
-
-  @override
-  void debugFillProperties(DiagnosticPropertiesBuilder description) {
-    super.debugFillProperties(description);
-    description.add(
-      FlagProperty(
-        'isCurrent',
-        value: isCurrent,
-        ifTrue: 'active',
-        ifFalse: 'inactive',
-      ),
-    );
-    description.add(FlagProperty('canPop', value: canPop, ifTrue: 'can pop'));
-  }
-
-  @override
-  bool updateShouldNotifyDependent(
-    covariant _WindowScopeStatus oldWidget,
-    Set<_WindowRouteAspect> dependencies,
-  ) {
-    return dependencies.any(
-      (_WindowRouteAspect dependency) => switch (dependency) {
-        _WindowRouteAspect.isCurrent => isCurrent != oldWidget.isCurrent,
-        _WindowRouteAspect.canPop => canPop != oldWidget.canPop,
-        _WindowRouteAspect.settings =>
-          route.settings != oldWidget.route.settings,
-      },
-    );
-  }
-}
-
-class _WindowScope<T> extends StatefulWidget {
-  const _WindowScope({
-    super.key,
-    required this.route,
-  });
-
-  final WindowRoute<T> route;
-
-  @override
-  _WindowScopeState<T> createState() => _WindowScopeState<T>();
-}
-
-class _WindowScopeState<T> extends State<_WindowScope<T>> {
-  Widget? _page;
-
-  late Listenable _listenable;
-
-  final FocusScopeNode focusScopeNode = FocusScopeNode(
-    debugLabel: '$_WindowScopeState Focus Scope',
-  );
-  final ScrollController primaryScrollController = ScrollController();
-
-  @override
-  void initState() {
-    super.initState();
-    final List<Listenable> animations = <Listenable>[
-      if (widget.route.animation != null) widget.route.animation!,
-      if (widget.route.secondaryAnimation != null)
-        widget.route.secondaryAnimation!,
-    ];
-    _listenable = Listenable.merge(animations);
-  }
-
-  @override
-  void didUpdateWidget(_WindowScope<T> oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    assert(widget.route == oldWidget.route);
-    _updateFocusScopeNode();
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _page = null;
-    _updateFocusScopeNode();
-  }
-
-  void _updateFocusScopeNode() {
-    final TraversalEdgeBehavior traversalEdgeBehavior;
-    final WindowRoute<T> route = widget.route;
-    if (route.traversalEdgeBehavior != null) {
-      traversalEdgeBehavior = route.traversalEdgeBehavior!;
-    } else {
-      traversalEdgeBehavior =
-          route.navigator!.widget.routeTraversalEdgeBehavior;
-    }
-    focusScopeNode.traversalEdgeBehavior = traversalEdgeBehavior;
-    if (route.isCurrent && _shouldRequestFocus) {
-      route.navigator!.focusNode.enclosingScope?.setFirstFocus(focusScopeNode);
-    }
-  }
-
-  void _forceRebuildPage() {
-    setState(() {
-      _page = null;
+  WindowMode _mode = WindowMode.normal;
+  WindowMode get mode => _mode;
+  set mode(WindowMode mode) {
+    if (mode == _mode) return;
+    _updateWindowState(() {
+      _mode = mode;
     });
   }
 
-  @override
-  void dispose() {
-    focusScopeNode.dispose();
-    primaryScrollController.dispose();
-    super.dispose();
+  Rect _rect = const Offset(100, 100) & const Size(300, 300);
+  Rect get rect => _rect;
+  set rect(Rect rect) {
+    if (rect == _rect) return;
+    _updateWindowState(() {
+      _rect = rect;
+    });
   }
 
-  bool get _shouldIgnoreFocusRequest {
-    return widget.route.animation?.status == AnimationStatus.reverse ||
-        (widget.route.navigator?.userGestureInProgress ?? false);
-  }
-
-  bool get _shouldRequestFocus {
-    return widget.route.navigator!.widget.requestFocus;
-  }
-
-  // This should be called to wrap any changes to route.isCurrent, route.canPop,
-  // and route.offstage.
-  void _routeSetState(VoidCallback fn) {
-    if (widget.route.isCurrent &&
-        !_shouldIgnoreFocusRequest &&
-        _shouldRequestFocus) {
-      widget.route.navigator!.focusNode.enclosingScope
-          ?.setFirstFocus(focusScopeNode);
+  void _updateWindowState(VoidCallback fn) {
+    if (_windowKey.currentState != null) {
+      // ignore: invalid_use_of_protected_member
+      _windowKey.currentState!.setState(fn);
+    } else {
+      fn();
     }
-    setState(fn);
   }
 
-  @override
-  Widget build(BuildContext context) {
-    // Only top most route can participate in focus traversal.
-    focusScopeNode.skipTraversal = !widget.route.isCurrent;
-    return AnimatedBuilder(
-      animation: widget.route.restorationScopeId,
-      builder: (BuildContext context, Widget? child) {
-        assert(child != null);
-        return RestorationScope(
-          restorationId: widget.route.restorationScopeId.value,
-          child: child!,
-        );
-      },
-      child: _WindowScopeStatus(
-        route: widget.route,
-        isCurrent:
-            widget.route.isCurrent, // _routeSetState is called if this updates
-        canPop: widget.route.canPop, // _routeSetState is called if this updates
-        child: Offstage(
-          offstage:
-              widget.route.offstage, // _routeSetState is called if this updates
-          child: PageStorage(
-            bucket: widget.route._storageBucket, // immutable
-            child: Builder(
-              builder: (BuildContext context) {
-                return PrimaryScrollController(
-                  controller: primaryScrollController,
-                  child: FocusScope.withExternalFocusNode(
-                    focusScopeNode: focusScopeNode, // immutable
-                    child: RepaintBoundary(
-                      child: Window(
-                        child: ListenableBuilder(
-                          listenable: _listenable, // immutable
-                          builder: (BuildContext context, Widget? child) {
-                            return widget.route.buildTransitions(
-                              context,
-                              widget.route.animation!,
-                              widget.route.secondaryAnimation!,
-                              ListenableBuilder(
-                                listenable: widget.route.navigator
-                                        ?.userGestureInProgressNotifier ??
-                                    ValueNotifier<bool>(false),
-                                builder: (BuildContext context, Widget? child) {
-                                  final bool ignoreEvents =
-                                      _shouldIgnoreFocusRequest;
-                                  focusScopeNode.canRequestFocus =
-                                      !ignoreEvents;
-                                  return IgnorePointer(
-                                    ignoring: ignoreEvents,
-                                    child: child,
-                                  );
-                                },
-                                child: child,
-                              ),
-                            );
-                          },
-                          child: widget.route.buildWindow(
-                            context,
-                            _page ??= RepaintBoundary(
-                              key: widget.route._subtreeKey, // immutable
-                              child: Builder(
-                                builder: (BuildContext context) {
-                                  return widget.route.buildPage(
-                                    context,
-                                    widget.route.animation!,
-                                    widget.route.secondaryAnimation!,
-                                  );
-                                },
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-        ),
-      ),
-    );
+  void toggleWindowMode() {
+    mode = mode.toggle;
+  }
+
+  void shift(Offset delta) {
+    rect = rect.shift(delta);
+  }
+
+  void toNormalMode({required Offset startPosition}) {
+    assert(startPosition.dx >= 0 && startPosition.dy >= 0);
+    if (mode == WindowMode.normal) return;
+    final render = _windowKey.currentContext!.findRenderObject()! as RenderBox;
+    final localStartPosition = render.globalToLocal(startPosition);
+    final xRatio = localStartPosition.dx / render.size.width;
+    final yRatio = localStartPosition.dy / render.size.height;
+    mode = WindowMode.normal;
+    rect = (localStartPosition -
+            Offset(
+              rect.size.width * xRatio,
+              rect.size.height * yRatio,
+            )) &
+        rect.size;
   }
 }
 
 abstract class WindowRoute<T> extends TransitionRoute<T>
-    with LocalHistoryRoute<T> {
+    with LocalHistoryRoute<T>, WindowManagementMixin<T> {
   WindowRoute({
     super.settings,
+    this.defaultSize = const Size(300, 300),
     this.traversalEdgeBehavior,
   });
 
+  final Size defaultSize;
   final TraversalEdgeBehavior? traversalEdgeBehavior;
 
   @optionalTypeArgs
-  static WindowRoute<T>? of<T extends Object?>(BuildContext context) {
-    return _of<T>(context);
+  static WindowRoute<T> of<T extends Object?>(BuildContext context) {
+    final windowRoute = _maybeOf<T>(context);
+    if (windowRoute == null) {
+      throw AssertionError(
+        'WindowRoute operation requested with a context that does not include a WindowRoute.',
+      );
+    }
+    return windowRoute;
   }
 
-  static WindowRoute<T>? _of<T extends Object?>(
+  @optionalTypeArgs
+  static WindowRoute<T>? maybeOf<T extends Object?>(BuildContext context) {
+    return _maybeOf<T>(context);
+  }
+
+  static WindowRoute<T>? _maybeOf<T extends Object?>(
     BuildContext context, [
     _WindowRouteAspect? aspect,
   ]) {
@@ -268,14 +117,14 @@ abstract class WindowRoute<T> extends TransitionRoute<T>
     )?.route as WindowRoute<T>?;
   }
 
-  static bool? isCurrentOf(BuildContext context) =>
-      _of(context, _WindowRouteAspect.isCurrent)?.isCurrent;
+  static bool? isCurrentMaybeOf(BuildContext context) =>
+      _maybeOf(context, _WindowRouteAspect.isCurrent)?.isCurrent;
 
-  static bool? canPopOf(BuildContext context) =>
-      _of(context, _WindowRouteAspect.canPop)?.canPop;
+  static bool? canPopMaybeOf(BuildContext context) =>
+      _maybeOf(context, _WindowRouteAspect.canPop)?.canPop;
 
-  static RouteSettings? settingsOf(BuildContext context) =>
-      _of(context, _WindowRouteAspect.settings)?.settings;
+  static RouteSettings? settingsMaybeOf(BuildContext context) =>
+      _maybeOf(context, _WindowRouteAspect.settings)?.settings;
 
   @protected
   void setState(VoidCallback fn) {
