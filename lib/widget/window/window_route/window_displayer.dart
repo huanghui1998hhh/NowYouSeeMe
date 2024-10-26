@@ -29,28 +29,11 @@ class _WindowDisplayerState extends State<WindowDisplayer> {
       );
     }
 
-    current = switch (mode) {
-      WindowMode.normal => Padding(
-          padding: EdgeInsets.only(
-            top: rect.top,
-            left: rect.left,
-          ),
-          child: Align(
-            alignment: Alignment.topLeft,
-            child: SizedBox(
-              width: rect.width,
-              height: rect.height,
-              child: current,
-            ),
-          ),
-        ),
-      WindowMode.maximized => ConstrainedBox(
-          constraints: const BoxConstraints.expand(),
-          child: current,
-        ),
-    };
-
-    return current;
+    return WindowModalBox(
+      mode: mode,
+      windowRect: rect,
+      child: current,
+    );
   }
 
   void _onResizeUpdate(ResizeDirection direction, DragUpdateDetails details) {

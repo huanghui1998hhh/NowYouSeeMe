@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 
 import '../resize_listener.dart';
 import '../widget/standard_window_container.dart';
+import 'window_model_box.dart';
 
 part 'window_displayer.dart';
 part 'window_scope.dart';
