@@ -3,7 +3,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
 
-import '../resize_listener.dart';
+import '../../resize_listener.dart';
 import '../widget/standard_window_container.dart';
 import 'window_model_box.dart';
 
