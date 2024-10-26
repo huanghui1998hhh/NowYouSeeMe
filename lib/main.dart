@@ -3,8 +3,8 @@ import 'package:provider/provider.dart';
 
 import 'util/storage.dart';
 import 'widget/app/first_app.dart';
+import 'widget/app_desktop_item.dart';
 import 'widget/brightness_switcher.dart';
-import 'widget/window/window_route/window_route.dart';
 
 void main() async {
   await Storage.init();
@@ -58,13 +58,22 @@ class _MyHomePageState extends State<MyHomePage> {
             fit: BoxFit.cover,
           ),
         ),
-        const Positioned(
-          top: 10,
-          left: 10,
-          child: ExampleButton(),
-        ),
-        const Align(
-          child: ExampleButton(),
+        const Positioned.fill(
+          child: Material(
+            type: MaterialType.transparency,
+            child: Stack(
+              children: [
+                Positioned(
+                  top: 10,
+                  left: 10,
+                  child: ExampleButton(),
+                ),
+                Align(
+                  child: ExampleButton(),
+                ),
+              ],
+            ),
+          ),
         ),
       ],
     );
@@ -78,24 +87,6 @@ class ExampleButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: () {
-        Navigator.of(context).push(
-          StandardWindowRoute(
-            pageBuilder: (context, animation, secondaryAnimation) =>
-                const FirstApp(),
-          ),
-        );
-      },
-      child: Container(
-        width: 60,
-        height: 60,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: const Align(child: FlutterLogo(size: 44)),
-      ),
-    );
+    return AppDesktopItem(appInfo: firstApp);
   }
 }
