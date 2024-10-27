@@ -25,6 +25,9 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: seedColor),
         useMaterial3: true,
         splashFactory: InkSparkle.splashFactory,
+        popupMenuTheme: const PopupMenuThemeData(
+          menuPadding: EdgeInsets.symmetric(vertical: 4),
+        ),
       ),
       darkTheme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
@@ -33,6 +36,9 @@ class MyApp extends StatelessWidget {
         ),
         useMaterial3: true,
         splashFactory: InkSparkle.splashFactory,
+        popupMenuTheme: const PopupMenuThemeData(
+          menuPadding: EdgeInsets.symmetric(vertical: 4),
+        ),
       ),
       builder: (context, child) => Scaffold(body: child),
       home: const MyHomePage(),

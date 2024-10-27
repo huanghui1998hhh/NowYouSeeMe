@@ -32,9 +32,29 @@ class _AppDesktopItemState extends State<AppDesktopItem> {
             onTapDown: (_) {
               _controller.update(WidgetState.selected, true);
             },
-            onDoubleTap: () {
-              Navigator.of(context).push(widget.appInfo.route());
-              _controller.update(WidgetState.selected, false);
+            onDoubleTap: runApp,
+            onSecondaryTapDown: (e) {
+              _controller.update(WidgetState.selected, true);
+              showMenu(
+                context: context,
+                position: RelativeRect.fromLTRB(
+                  e.globalPosition.dx,
+                  e.globalPosition.dy,
+                  e.globalPosition.dx,
+                  e.globalPosition.dy,
+                ),
+                popUpAnimationStyle: AnimationStyle(
+                  duration: const Duration(milliseconds: 166),
+                  reverseDuration: const Duration(milliseconds: 166),
+                ),
+                items: [
+                  PopupMenuItem(
+                    height: 32,
+                    onTap: runApp,
+                    child: const Text('Open'),
+                  ),
+                ],
+              );
             },
             child: Padding(
               padding: const EdgeInsets.all(2),
@@ -79,6 +99,11 @@ class _AppDesktopItemState extends State<AppDesktopItem> {
         ),
       ),
     );
+  }
+
+  void runApp() {
+    Navigator.of(context).push(widget.appInfo.route());
+    _controller.update(WidgetState.selected, false);
   }
 }
 
