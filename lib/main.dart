@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'util/storage.dart';
-import 'widget/app/first_app.dart';
+import 'widget/app/first_app.dart' deferred as first_app;
 import 'widget/app_desktop_item.dart';
 import 'widget/brightness_switcher.dart';
+import 'widget/window/window_route/window_route.dart';
 
 void main() async {
   await Storage.init();
@@ -93,6 +94,15 @@ class ExampleButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppDesktopItem(appInfo: firstApp);
+    return AppDesktopItem(
+      appInfo: AppInfo(
+        name: 'First App',
+        route: () => AsyncWindowRoute(
+          libFuture: first_app.loadLibrary(),
+          pageBuilder: (context, animation, secondaryAnimation) =>
+              first_app.FirstApp(),
+        ),
+      ),
+    );
   }
 }

@@ -3,6 +3,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
 
+import '../../async_container.dart';
 import '../../resize_listener.dart';
 import '../widget/standard_window_container.dart';
 import 'window_model_box.dart';
@@ -29,6 +30,8 @@ mixin WindowManagementMixin<T> on Route<T> {
   final GlobalKey<_WindowDisplayerState> _windowKey =
       GlobalKey<_WindowDisplayerState>();
 
+  Size get defaultSize;
+
   WindowMode _mode = WindowMode.normal;
   WindowMode get mode => _mode;
   set mode(WindowMode mode) {
@@ -38,7 +41,9 @@ mixin WindowManagementMixin<T> on Route<T> {
     });
   }
 
-  Rect _rect = const Offset(100, 100) & const Size(300, 300);
+  late Rect _rect =
+      navigator?.context.renderSizer?.centerRectFor(defaultSize) ??
+          Offset.zero & defaultSize;
   Rect get rect => _rect;
   set rect(Rect rect) {
     if (rect == _rect) return;
@@ -85,10 +90,11 @@ abstract class WindowRoute<T> extends TransitionRoute<T>
     with LocalHistoryRoute<T>, WindowManagementMixin<T> {
   WindowRoute({
     super.settings,
-    this.defaultSize = const Size(300, 300),
+    this.defaultSize = const Size(280, 380),
     this.traversalEdgeBehavior,
   });
 
+  @override
   final Size defaultSize;
   final TraversalEdgeBehavior? traversalEdgeBehavior;
 
@@ -406,6 +412,7 @@ class StandardWindowRoute<T> extends WindowRoute<T> {
     required RoutePageBuilder pageBuilder,
     Duration transitionDuration = const Duration(milliseconds: 200),
     RouteTransitionsBuilder? transitionBuilder,
+    super.defaultSize,
     super.settings,
     super.traversalEdgeBehavior,
   })  : _pageBuilder = pageBuilder,
@@ -459,4 +466,55 @@ class StandardWindowRoute<T> extends WindowRoute<T> {
     }
     return _transitionBuilder(context, animation, secondaryAnimation, child);
   }
+}
+
+class AsyncWindowRoute<T> extends StandardWindowRoute<T> {
+  AsyncWindowRoute({
+    required Future<dynamic> libFuture,
+    required super.pageBuilder,
+    super.transitionDuration = const Duration(milliseconds: 200),
+    super.transitionBuilder,
+    super.defaultSize,
+    super.settings,
+    super.traversalEdgeBehavior,
+  }) : _libFuture = libFuture;
+
+  final Future<dynamic> _libFuture;
+
+  @override
+  Widget buildPage(
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+  ) {
+    return Semantics(
+      scopesRoute: true,
+      explicitChildNodes: true,
+      child: AsyncPageContainer(
+        libFuture: _libFuture,
+        builder: (context) =>
+            _pageBuilder(context, animation, secondaryAnimation),
+      ),
+    );
+  }
+}
+
+extension on BuildContext {
+  /// The size of the render object.
+  ///
+  /// **Why not just use [Element.size]?**
+  ///
+  /// Usually we should not get size during build. And the [Element.size] did so.
+  Size? get renderSizer => switch (findRenderObject()) {
+        final RenderBox e => e.size,
+        _ => null,
+      };
+}
+
+extension on Size {
+  Rect centerRectFor(Size size) => Rect.fromCenter(
+        center: center(Offset.zero),
+        width: size.width,
+        height: size.height,
+      );
 }

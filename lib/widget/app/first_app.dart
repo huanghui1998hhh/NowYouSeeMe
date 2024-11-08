@@ -1,16 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../app_desktop_item.dart';
 import '../brightness_switcher.dart';
 import '../window/widget/window_draggable_area.dart';
 import '../window/window_route/window_route.dart';
-
-final firstApp = AppInfo(
-  name: 'First App',
-  route: () => StandardWindowRoute(
-    pageBuilder: (context, animation, secondaryAnimation) => const FirstApp(),
-  ),
-);
 
 class FirstApp extends StatelessWidget {
   const FirstApp({super.key});
