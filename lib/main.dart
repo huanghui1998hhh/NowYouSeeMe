@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'apps.dart';
 import 'util/storage.dart';
-import 'widget/app/first_app.dart' deferred as first_app;
 import 'widget/app_desktop_item.dart';
 import 'widget/brightness_switcher.dart';
-import 'widget/window/window_route/window_route.dart';
 
 void main() async {
   await Storage.init();
@@ -56,6 +55,20 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   @override
+  void initState() {
+    super.initState();
+
+    Future.delayed(const Duration(seconds: 1)).then((value) {
+      if (mounted) {
+        if (Storage.getBool('welcome_app_shown') != true) {
+          Storage.setBool('welcome_app_shown', true);
+          Navigator.of(context).push(welcomeApp.route());
+        }
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
@@ -65,7 +78,7 @@ class _MyHomePageState extends State<MyHomePage> {
             fit: BoxFit.cover,
           ),
         ),
-        const Positioned.fill(
+        Positioned.fill(
           child: Material(
             type: MaterialType.transparency,
             child: Stack(
@@ -73,36 +86,16 @@ class _MyHomePageState extends State<MyHomePage> {
                 Positioned(
                   top: 10,
                   left: 10,
-                  child: ExampleButton(),
+                  child: AppDesktopItem(appInfo: firstApp),
                 ),
                 Align(
-                  child: ExampleButton(),
+                  child: AppDesktopItem(appInfo: welcomeApp),
                 ),
               ],
             ),
           ),
         ),
       ],
-    );
-  }
-}
-
-class ExampleButton extends StatelessWidget {
-  const ExampleButton({
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return AppDesktopItem(
-      appInfo: AppInfo(
-        name: 'First App',
-        route: () => AsyncWindowRoute(
-          libFuture: first_app.loadLibrary(),
-          pageBuilder: (context, animation, secondaryAnimation) =>
-              first_app.FirstApp(),
-        ),
-      ),
     );
   }
 }

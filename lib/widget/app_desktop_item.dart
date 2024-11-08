@@ -67,10 +67,12 @@ class _AppDesktopItemState extends State<AppDesktopItem> {
                       width: 49,
                       height: 49,
                       alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: widget.appInfo.primaryColor ?? Colors.white,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
+                      decoration: widget.appInfo.primaryColor == null
+                          ? null
+                          : BoxDecoration(
+                              color: widget.appInfo.primaryColor,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
                       child: widget.appInfo.icon ?? const FlutterLogo(size: 36),
                     ),
                   ),

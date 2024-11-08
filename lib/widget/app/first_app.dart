@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../brightness_switcher.dart';
-import '../window/widget/window_draggable_area.dart';
+import '../title_bar.dart';
 import '../window/window_route/window_route.dart';
 
 class FirstApp extends StatelessWidget {
@@ -9,68 +9,12 @@ class FirstApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final window = WindowRoute.of(context);
-
     return Column(
       children: [
-        SizedBox(
-          height: 40,
-          child: Material(
-            color: Theme.of(context).colorScheme.secondaryContainer,
-            child: Row(
-              children: [
-                const Expanded(
-                  child: WindowDraggableArea(
-                    child: SizedBox.expand(),
-                  ),
-                ),
-                InkWell(
-                  onTap: window.toggleWindowMode,
-                  child: const SizedBox(
-                    width: 46,
-                    child: Align(
-                      child: Icon(Icons.remove),
-                    ),
-                  ),
-                ),
-                InkWell(
-                  onTap: window.toggleWindowMode,
-                  child: const SizedBox(
-                    width: 46,
-                    child: Align(
-                      child: Icon(Icons.unfold_more),
-                    ),
-                  ),
-                ),
-                InkWell(
-                  onTap: () {
-                    Navigator.of(context).pop();
-                  },
-                  hoverColor: const Color(0xFFe30d2c),
-                  child: const SizedBox(
-                    width: 46,
-                    child: Align(
-                      child: Icon(Icons.close),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        TextButton(
-          onPressed: () {
-            window.mode = WindowMode.maximized;
-          },
-          child: const Text('Maximize'),
-        ),
-        TextButton(
-          onPressed: () {
-            window.mode = WindowMode.normal;
-          },
-          child: const Text('Normal'),
-        ),
+        const TitleBar(),
+        const SizedBox(height: 44),
         const BrightnessSwitcher(),
+        const SizedBox(height: 22),
         TextButton(
           onPressed: () {
             Navigator.of(context).push(
